@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   Pill, LayoutDashboard, Package, ShoppingCart, FileText,
   Users, BarChart2, Shield, ChevronRight, Lock, Eye, EyeOff,
-  ArrowLeft, Settings, Activity
+  ArrowLeft, Settings, Activity, Loader2
 } from "lucide-react";
 
 const portalSections = [
@@ -76,21 +77,41 @@ const portalSections = [
 ];
 
 export default function StaffPortal() {
-  const [showPin, setShowPin] = useState(false);
-  const [pin, setPin] = useState("");
+  const router = useRouter();
+  const [email, setEmail] = useState("admin@medicart.com");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState("");
-  const [shake, setShake] = useState(false);
 
-  const handleUnlock = () => {
-    if (pin === "1234") {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Login failed.");
+        return;
+      }
+      if (!data.user?.isAdmin) {
+        setError("This account does not have admin access.");
+        return;
+      }
       setUnlocked(true);
-      setError("");
-    } else {
-      setError("Incorrect PIN. Try again.");
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setPin("");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -144,38 +165,47 @@ export default function StaffPortal() {
         </motion.p>
 
         {!unlocked ? (
-          /* PIN gate */
+          /* Login form */
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className={`w-full max-w-sm ${shake ? "animate-bounce" : ""}`}
+            className="w-full max-w-sm"
           >
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm shadow-2xl">
               <div className="flex flex-col items-center mb-6">
                 <div className="w-14 h-14 rounded-full bg-gray-800 border border-white/10 flex items-center justify-center mb-4">
                   <Lock size={22} className="text-gray-400" />
                 </div>
-                <h2 className="text-lg font-bold text-white">Enter Staff PIN</h2>
-                <p className="text-xs text-gray-500 mt-1 text-center">Enter your PIN to access the admin dashboard</p>
+                <h2 className="text-lg font-bold text-white">Admin Login</h2>
+                <p className="text-xs text-gray-500 mt-1 text-center">Sign in with your admin credentials</p>
               </div>
 
-              <div className="relative mb-4">
+              <div className="space-y-3 mb-4">
                 <input
-                  type={showPin ? "text" : "password"}
-                  value={pin}
-                  onChange={(e) => { setPin(e.target.value); setError(""); }}
-                  onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                  placeholder="••••"
-                  maxLength={8}
-                  className="w-full bg-gray-900/80 border border-white/10 rounded-xl px-4 py-3 text-white text-center text-xl tracking-[0.5em] placeholder:tracking-normal placeholder:text-2xl placeholder:text-gray-700 focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                  placeholder="Admin email"
+                  className="w-full bg-gray-900/80 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all"
                 />
-                <button
-                  onClick={() => setShowPin(!showPin)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
-                >
-                  {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    placeholder="Password"
+                    className="w-full bg-gray-900/80 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  />
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -189,13 +219,16 @@ export default function StaffPortal() {
               )}
 
               <button
-                onClick={handleUnlock}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold text-sm hover:from-green-400 hover:to-teal-400 transition-all shadow-lg shadow-green-900/30 hover:shadow-green-900/50"
+                onClick={handleLogin}
+                disabled={loading}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold text-sm hover:from-green-400 hover:to-teal-400 transition-all shadow-lg shadow-green-900/30 disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                Unlock Portal
+                {loading ? <><Loader2 size={15} className="animate-spin" /> Signing in...</> : "Sign In"}
               </button>
 
-              <p className="text-center text-[11px] text-gray-700 mt-4">Demo PIN: 1234</p>
+              <p className="text-center text-[11px] text-gray-700 mt-4">
+                Demo: admin@medicart.com / admin123
+              </p>
             </div>
           </motion.div>
         ) : (
@@ -251,13 +284,13 @@ export default function StaffPortal() {
             </div>
 
             <div className="mt-8 flex items-center justify-center">
-              <Link
-                href="/admin"
+              <button
+                onClick={() => router.push("/admin")}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 text-white text-sm font-bold hover:from-green-400 hover:to-teal-400 transition-all shadow-lg shadow-green-900/30"
               >
                 <LayoutDashboard size={15} />
                 Enter Full Dashboard
-              </Link>
+              </button>
             </div>
           </motion.div>
         )}
