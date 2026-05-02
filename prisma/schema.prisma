@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum UserTier {
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum RxStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+// ─── Models ────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  phone        String?
+  avatar       String?
+  passwordHash String
+  mediCoins    Int      @default(200)
+  memberSince  DateTime @default(now())
+  tier         UserTier @default(SILVER)
+  isAdmin      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses     Address[]
+  orders        Order[]
+  prescriptions Prescription[]
+  wishlist      WishlistItem[]
+  cartItems     CartItem[]
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  zip       String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id            String   @id
+  name          String
+  brand         String
+  genericName   String?
+  category      String
+  subcategory   String
+  form          String
+  strength      String?
+  price         Float
+  originalPrice Float
+  discount      Int
+  rating        Float    @default(0)
+  reviews       Int      @default(0)
+  stock         Int      @default(0)
+  image         String
+  color         String
+  bgColor       String
+  tags          String[]
+  description   String   @db.Text
+  uses          String[]
+  sideEffects   String[]
+  prescription  Boolean  @default(false)
+  isNew         Boolean  @default(false)
+  isBestSeller  Boolean  @default(false)
+  isTrending    Boolean  @default(false)
+  inStock       Boolean  @default(true)
+  packSize      String
+  manufacturer  String
+  expiryMonths  Int
+  sku           String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+  cartItems     CartItem[]
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  status        OrderStatus @default(PENDING)
+  total         Float
+  subtotal      Float
+  discount      Float       @default(0)
+  deliveryFee   Float       @default(0)
+  tax           Float       @default(0)
+  promoCode     String?
+  paymentMethod String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items   OrderItem[]
+  address OrderAddress?
+}
+
+model OrderAddress {
+  id      String  @id @default(cuid())
+  orderId String  @unique
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  label   String
+  line1   String
+  line2   String?
+  city    String
+  state   String
+  zip     String
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  name      String
+  image     String?
+}
+
+model Prescription {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  patientName      String
+  doctorName       String?
+  hospital         String?
+  issueDate        String?
+  notes            String?
+  fileName         String
+  fileUrl          String?
+  status           RxStatus @default(PENDING)
+  reviewNotes      String?
+  rejectionReason  String?
+  verificationCode String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  medications RxMedication[]
+}
+
+model RxMedication {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  name           String
+  dosage         String?
+  duration       String?
+  instructions   String?
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+}
