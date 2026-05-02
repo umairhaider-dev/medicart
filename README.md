@@ -53,7 +53,7 @@ A production-grade e-commerce pharmacy application built with **Next.js 15**, **
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/medicart.git
+git clone https://github.com/umairhaider-dev/medicart.git
 cd medicart
 npm install
 ```
@@ -158,4 +158,4 @@ prisma/
 
 ## License
 
-MIT — built by [Umair Haider](https://github.com/YOUR_USERNAME)
+MIT — built by [Umair Haider](https://github.com/umairhaider-dev)
