@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
-import { nanoid } from "crypto";
+import { randomBytes } from "crypto";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req);
@@ -13,7 +13,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const verificationCode =
       status === "VERIFIED"
-        ? `RX-${nanoid(4).toUpperCase()}-${nanoid(4).toUpperCase()}`
+        ? `RX-${randomBytes(2).toString("hex").toUpperCase()}-${randomBytes(2).toString("hex").toUpperCase()}`
         : undefined;
 
     const prescription = await prisma.prescription.update({

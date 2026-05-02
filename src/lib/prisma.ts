@@ -3,13 +3,13 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not set. Add it to .env.local");
-  }
+function createPrismaClient(): PrismaClient {
+  // During `next build` worker processes, DATABASE_URL may not be injected.
+  // Use a placeholder so the module can be imported without throwing.
+  // Any actual DB query will fail gracefully at that point (none are made during build).
+  const connectionString =
+    process.env.DATABASE_URL ?? "postgresql://build:build@localhost/build";
   const adapter = new PrismaPg({ connectionString });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new PrismaClient({ adapter } as any);
 }
 

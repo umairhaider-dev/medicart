@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Search, Sparkles, TrendingUp, Package, Tag, Zap,
   ChevronRight, Home, X
@@ -98,7 +99,7 @@ function ProductsContent() {
           <div className="px-4 sm:px-6 lg:px-10 xl:px-14 py-3 space-y-2">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-xs text-gray-500">
-              <a href="/" className="hover:text-green-600 flex items-center gap-1 transition-colors"><Home size={12} /> Home</a>
+              <Link href="/" className="hover:text-green-600 flex items-center gap-1 transition-colors"><Home size={12} /> Home</Link>
               <ChevronRight size={11} className="text-gray-300" />
               <span className="text-gray-800 font-semibold">Products</span>
               {filters.category !== "All" && (

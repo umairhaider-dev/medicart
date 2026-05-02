@@ -43,7 +43,7 @@ export default function SearchOverlay({ open, onClose, onSearch, initialQuery = 
   const [recent, setRecent] = useState<string[]>([]);
   const [activeIdx, setActiveIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => { if (open) { setRecent(getRecent()); setTimeout(() => inputRef.current?.focus(), 50); } }, [open]);
 

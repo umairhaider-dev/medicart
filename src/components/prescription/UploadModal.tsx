@@ -466,7 +466,7 @@ export default function UploadModal({ onClose, onSuccess }: { onClose: () => voi
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="space-y-2">
                   <p className="text-xs text-gray-400">You'll receive an email notification at</p>
-                  <p className="text-sm font-semibold text-gray-700">{useAuth().user?.email ?? "your email"}</p>
+                  <p className="text-sm font-semibold text-gray-700">{user?.email ?? "your email"}</p>
                 </motion.div>
 
                 <motion.button
