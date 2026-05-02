@@ -1,8 +1,13 @@
+import { config } from "dotenv";
+config({ path: ".env.local" });
+
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PRODUCTS } from "../src/lib/products";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 
 async function main() {
   console.log("🌱 Seeding MediCart database...\n");
@@ -47,8 +52,9 @@ async function main() {
       },
     });
     seeded++;
+    if (seeded % 10 === 0) process.stdout.write(`\r   Products: ${seeded}/${PRODUCTS.length}`);
   }
-  console.log(`✅ Seeded ${seeded} products`);
+  console.log(`\r✅ Seeded ${seeded} products       `);
 
   // ── Admin user ────────────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash("admin123", 10);
@@ -64,7 +70,7 @@ async function main() {
       tier: "PLATINUM",
     },
   });
-  console.log(`✅ Admin user: ${admin.email}`);
+  console.log(`✅ Admin:  ${admin.email}`);
 
   // ── Demo user ─────────────────────────────────────────────────────────────
   const demoHash = await bcrypt.hash("demo123", 10);
@@ -103,11 +109,11 @@ async function main() {
       },
     },
   });
-  console.log(`✅ Demo user:  ${demo.email}`);
+  console.log(`✅ Demo:   ${demo.email}`);
 
   console.log("\n🎉 Database seeding complete!");
-  console.log("   Admin login:  admin@medicart.com / admin123");
-  console.log("   Demo login:   demo@medicart.com  / demo123");
+  console.log("   Admin:  admin@medicart.com / admin123");
+  console.log("   Demo:   demo@medicart.com  / demo123");
 }
 
 main()

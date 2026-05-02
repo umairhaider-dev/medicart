@@ -1,5 +1,11 @@
 import { defineConfig } from "prisma/config";
+import { config } from "dotenv";
+
+// Prisma CLI doesn't load .env.local automatically (Next.js convention)
+config({ path: ".env.local" });
 
 export default defineConfig({
-  datasourceUrl: process.env.DATABASE_URL!,
+  datasource: {
+    url: process.env.DATABASE_URL!,
+  },
 });
